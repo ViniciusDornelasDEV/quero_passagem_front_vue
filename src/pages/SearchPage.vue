@@ -1,10 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { MapPin, ArrowRightLeft, Calendar } from 'lucide-vue-next'
-import { useSearchStore } from '../stores/searchStore.js'
+import { useSearchStore } from '../stores/searchStore'
 
 const emit = defineEmits(['search'])
+
+const router = useRouter()
 
 const searchStore = useSearchStore()
 const { loadError, loadingStops, travelDate } = storeToRefs(searchStore)
@@ -48,6 +51,14 @@ function onSubmit() {
   const payload = searchStore.search()
   if (payload) {
     emit('search', payload)
+    router.push({
+      path: '/trips',
+      query: {
+        from: payload.from,
+        to: payload.to,
+        date: payload.travelDate,
+      },
+    })
   }
 }
 
