@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import SearchPage from './pages/SearchPage.vue'
+
+function onSearch(payload: { from: string; to: string; travelDate: string }) {
+  console.info('[search]', payload)
+}
 </script>
 
 <template>
-  <HelloWorld />
+  <SearchPage @search="onSearch" />
 </template>
