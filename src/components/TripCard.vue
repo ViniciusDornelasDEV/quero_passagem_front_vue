@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { Clock, MapPin, Circle, Armchair } from 'lucide-vue-next'
 import type { SeatMatrixItem, Trip } from '../types/models'
-import api from '../services/api'
+import { fetchSeatMatrix } from '../services/seatService'
 import { formatDuration, formatTripTotal } from '../utils/tripFormat'
 import SeatGrid from './SeatGrid.vue'
 
@@ -62,11 +62,7 @@ async function loadSeats(): Promise<void> {
   loadingSeats.value = true
   seatsError.value = null
   try {
-    const { data } = await api.post('/seats', {
-      travelId: props.trip.id,
-      orientation: 'horizontal',
-      type: 'matrix',
-    })
+    const data = await fetchSeatMatrix(props.trip.id)
     seats.value = toSeatList(data)
   } catch {
     seatsError.value = 'Não foi possível carregar os assentos.'

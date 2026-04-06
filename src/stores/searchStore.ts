@@ -1,4 +1,3 @@
-import { isAxiosError } from 'axios'
 import { defineStore } from 'pinia'
 import { getStops } from '../services/stopsService'
 import type {
@@ -125,14 +124,7 @@ export const useSearchStore = defineStore('search', {
         this.stops = stops
         this.allowedStates = allowedStates
       } catch (e: unknown) {
-        let msg: string | undefined
-        if (isAxiosError(e)) {
-          const d = e.response?.data as { message?: string } | undefined
-          msg = typeof d?.message === 'string' ? d.message : undefined
-        } else if (e instanceof Error) {
-          msg = e.message
-        }
-        this.loadError = msg ?? 'Não foi possível carregar os destinos.'
+        this.loadError = 'Não foi possível carregar os destinos.'
       } finally {
         this.loadingStops = false
       }

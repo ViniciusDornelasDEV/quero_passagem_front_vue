@@ -1,6 +1,5 @@
-import { isAxiosError } from 'axios'
 import { defineStore } from 'pinia'
-import api from '../services/api'
+import { searchTrips as fetchSearchTrips } from '../services/tripService'
 import type { SearchTripsPayload, Trip } from '../types/models'
 
 interface TripState {
@@ -34,16 +33,10 @@ export const useTripStore = defineStore('trip', {
       this.loading = true
       this.error = null
       try {
-        const response = await api.post<unknown>('/search', payload)
-        this.trips = tripsFromResponse(response.data)
+        const data = await fetchSearchTrips(payload)
+        this.trips = tripsFromResponse(data)
       } catch (e: unknown) {
-        let msg: string | undefined
-        if (isAxiosError(e)) {
-          const d = e.response?.data as { error?: { message?: string } } | undefined
-          msg =
-            typeof d?.error?.message === 'string' ? d.error.message : undefined
-        }
-        this.error = msg ?? 'Erro ao buscar viagens'
+        this.error = 'Erro ao buscar viagens'
         this.trips = []
       } finally {
         this.loading = false
