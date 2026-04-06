@@ -1,0 +1,12 @@
+:root {
+  --primary: #16a34a;
+  --primary-dark: #15803d;
+  --gray-100: #f3f4f6;
+  --gray-400: #9ca3af;
+
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --surface: #ffffff;
+  --brand-blue: #2f66b3;
+}

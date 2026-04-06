@@ -147,32 +147,3 @@ async function toggleSeats(): Promise<void> {
     </div>
   </article>
 </template>
-
-<style scoped>
-.trip-card-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.trip-card__seats {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 14px;
-}
-
-.trip-card__seats-state,
-.trip-card__seats-error {
-  margin: 0;
-  font-size: 13px;
-}
-
-.trip-card__seats-state {
-  color: #64748b;
-}
-
-.trip-card__seats-error {
-  color: #b91c1c;
-}
-</style>
