@@ -163,7 +163,7 @@ export const useSearchStore = defineStore('search', {
     },
 
     search(): SearchTripsPayload | null {
-      if (!this.canSearch || !this.selectedOrigin || !this.selectedDestination) {
+      if (!this.canSearch) {
         return null
       }
       return {
