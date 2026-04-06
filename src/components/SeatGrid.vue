@@ -9,6 +9,9 @@ const props = defineProps<{
 const maxX = computed(() =>
   props.seats.length ? Math.max(...props.seats.map((s) => s.position.x)) : 0,
 )
+const maxY = computed(() =>
+  props.seats.length ? Math.max(...props.seats.map((s) => s.position.y)) : 0,
+)
 </script>
 
 <template>
@@ -26,8 +29,8 @@ const maxX = computed(() =>
           empty: seat.type !== 'seat',
         }"
         :style="{
-          gridArea: `${seat.position.y + 1} / ${seat.position.x + 1} / ${
-            seat.position.y + 2
+          gridArea: `${maxY - seat.position.y + 1} / ${seat.position.x + 1} / ${
+            maxY - seat.position.y + 2
           } / ${seat.position.x + 2}`
         }"
       >
