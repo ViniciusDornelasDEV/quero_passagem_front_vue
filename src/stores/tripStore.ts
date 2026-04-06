@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { searchTrips as fetchSearchTrips } from '../services/tripService'
+import { searchTrips } from '../services/tripService'
 import type { SearchTripsPayload, Trip } from '../types/models'
 
 interface TripState {
@@ -33,7 +33,7 @@ export const useTripStore = defineStore('trip', {
       this.loading = true
       this.error = null
       try {
-        const data = await fetchSearchTrips(payload)
+        const data = await searchTrips(payload)
         this.trips = tripsFromResponse(data)
       } catch (e: unknown) {
         this.error = 'Erro ao buscar viagens'

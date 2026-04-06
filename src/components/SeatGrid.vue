@@ -29,9 +29,11 @@ const maxY = computed(() =>
           empty: seat.type !== 'seat',
         }"
         :style="{
-          gridArea: `${maxY - seat.position.y + 1} / ${seat.position.x + 1} / ${
-            maxY - seat.position.y + 2
-          } / ${seat.position.x + 2}`
+          gridArea: 
+          `${maxY - seat.position.y + 1} / 
+          ${seat.position.x + 1} / 
+          ${maxY - seat.position.y + 2} / 
+          ${seat.position.x + 2}`
         }"
       >
         <span v-if="seat.type === 'seat'">

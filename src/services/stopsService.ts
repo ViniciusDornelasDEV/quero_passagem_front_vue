@@ -27,7 +27,7 @@ function normalizeStop(raw: unknown): Stop {
 }
 
 export async function getStops(): Promise<StopsFetchResult> {
-  const { data } = await api.get<unknown>('/stops')
+  const { data } = await api.get<StopsFetchResult>('/stops')
 
   let list: unknown[] = []
   let allowedStates: string[] = []

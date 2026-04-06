@@ -5,13 +5,9 @@ import { storeToRefs } from 'pinia'
 import { MapPin, ArrowRightLeft, Calendar } from 'lucide-vue-next'
 import { useSearchStore } from '../stores/searchStore'
 
-const emit = defineEmits(['search'])
-
 const router = useRouter()
-
 const searchStore = useSearchStore()
 const { loadError, loadingStops, travelDate } = storeToRefs(searchStore)
-
 const originOpen = ref(false)
 const destinationOpen = ref(false)
 
@@ -50,7 +46,6 @@ function swapOriginDestination() {
 function onSubmit() {
   const payload = searchStore.search()
   if (payload) {
-    emit('search', payload)
     router.push({
       path: '/trips',
       query: {

@@ -34,26 +34,8 @@ const seats = ref<SeatMatrixItem[]>([])
 const loadingSeats = ref(false)
 const seatsError = ref<string | null>(null)
 
-function toSeatList(payload: unknown): SeatMatrixItem[] {
-  const list = Array.isArray(payload)
-    ? payload
-    : typeof payload === 'object' && payload !== null && 'data' in payload
-      ? (payload as { data: unknown }).data
-      : []
-
-  if (!Array.isArray(list)) {
-    return []
-  }
-
-  return list.filter((item): item is SeatMatrixItem => {
-    if (typeof item !== 'object' || item === null || !('position' in item)) {
-      return false
-    }
-    const pos = (item as { position?: { x?: unknown; y?: unknown } }).position
-    return Boolean(
-      pos && typeof pos.x === 'number' && typeof pos.y === 'number',
-    )
-  })
+function toSeatList(payload: any): SeatMatrixItem[] {
+  return Array.isArray(payload?.data) ? payload.data : []
 }
 
 async function loadSeats(): Promise<void> {

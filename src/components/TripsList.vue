@@ -10,8 +10,8 @@ defineProps<{
 <template>
   <div class="trips-list" role="list" aria-label="Lista de viagens">
     <TripCard
-      v-for="(trip, index) in trips"
-      :key="trip.id ?? index"
+      v-for="(trip) in trips"
+      :key="trip.id"
       :trip="trip"
       class="trips-list__item"
     />
