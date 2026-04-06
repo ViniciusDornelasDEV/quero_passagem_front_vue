@@ -42,8 +42,6 @@ export type TripPrice = {
 export type Trip = {
   id?: string
   seatClass?: string
-  /** @deprecated use seatClass; kept for older payloads */
-  class?: string
   duration?: TripDuration
   company: {
     id?: string
@@ -67,13 +65,15 @@ export type Trip = {
     id?: string
     name?: string
   }
-  /** @deprecated use from; kept for older payloads */
-  origin?: {
-    name?: string
-  }
-  /** @deprecated use to; kept for older payloads */
-  destination?: {
-    name?: string
-  }
   availableSeats?: number
+}
+
+export type SeatMatrixItem = {
+  seat_number?: string
+  occupied?: boolean
+  type?: string
+  position: {
+    x: number
+    y: number
+  }
 }

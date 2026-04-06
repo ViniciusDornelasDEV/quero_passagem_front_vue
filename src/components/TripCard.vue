@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { Clock, MapPin, Circle, Armchair } from 'lucide-vue-next'
-import type { Trip } from '../types/models'
+import type { SeatMatrixItem, Trip } from '../types/models'
+import api from '../services/api'
 import { formatDuration, formatTripTotal } from '../utils/tripFormat'
+import SeatGrid from './SeatGrid.vue'
 
 const props = defineProps<{
   trip: Trip
@@ -10,7 +12,6 @@ const props = defineProps<{
 
 const logoSrc = computed(() => props.trip.company?.logo ?? '')
 const companyName = computed(() => props.trip.company?.name ?? '')
-const travelDuration = computed(() => props.trip.travelDuration ?? '')
 const departureTime = computed(() => props.trip.departure?.time ?? '—')
 const arrivalTime = computed(() => props.trip.arrival?.time ?? '—')
 
@@ -25,57 +26,153 @@ const seatLabel = computed(
   () => props.trip.seatClass ?? props.trip.class ?? '—',
 )
 
+const durationText = computed(() => formatDuration(props.trip))
 const priceText = computed(() => formatTripTotal(props.trip))
+
+const showSeats = ref(false)
+const seats = ref<SeatMatrixItem[]>([])
+const loadingSeats = ref(false)
+const seatsError = ref<string | null>(null)
+
+function toSeatList(payload: unknown): SeatMatrixItem[] {
+  const list = Array.isArray(payload)
+    ? payload
+    : typeof payload === 'object' && payload !== null && 'data' in payload
+      ? (payload as { data: unknown }).data
+      : []
+
+  if (!Array.isArray(list)) {
+    return []
+  }
+
+  return list.filter((item): item is SeatMatrixItem => {
+    if (typeof item !== 'object' || item === null || !('position' in item)) {
+      return false
+    }
+    const pos = (item as { position?: { x?: unknown; y?: unknown } }).position
+    return Boolean(
+      pos && typeof pos.x === 'number' && typeof pos.y === 'number',
+    )
+  })
+}
+
+async function loadSeats(): Promise<void> {
+  if (!props.trip.id || loadingSeats.value) return
+
+  loadingSeats.value = true
+  seatsError.value = null
+  try {
+    const { data } = await api.post('/seats', {
+      travelId: props.trip.id,
+      orientation: 'horizontal',
+      type: 'matrix',
+    })
+    seats.value = toSeatList(data)
+  } catch {
+    seatsError.value = 'Não foi possível carregar os assentos.'
+  } finally {
+    loadingSeats.value = false
+  }
+}
+
+async function toggleSeats(): Promise<void> {
+  showSeats.value = !showSeats.value
+  if (showSeats.value && seats.value.length === 0) {
+    await loadSeats()
+  }
+}
 </script>
 
 <template>
-  <article class="trip-card">
-    <div class="trip-card__logo">
-      <img
-        v-if="logoSrc"
-        :src="logoSrc"
-        :alt="companyName || 'Logo'"
-        class="trip-card__logo-img"
-        loading="lazy"
-      />
-      <div v-else class="trip-card__logo-fallback" aria-hidden="true">
-        {{ (companyName || '?').slice(0, 1).toUpperCase() }}
+  <article class="trip-card-wrapper">
+    <div class="trip-card">
+      <div class="trip-card__logo">
+        <img
+          v-if="logoSrc"
+          :src="logoSrc"
+          :alt="companyName || 'Logo'"
+          class="trip-card__logo-img"
+          loading="lazy"
+        />
+        <div v-else class="trip-card__logo-fallback" aria-hidden="true">
+          {{ (companyName || '?').slice(0, 1).toUpperCase() }}
+        </div>
+        <span v-if="companyName" class="trip-card__company">{{ companyName }}</span>
       </div>
-      <span v-if="companyName" class="trip-card__company">{{ companyName }}</span>
+
+      <div class="trip-card__times-col">
+        <div class="trip-times">
+          <Clock class="icon" :size="16" :stroke-width="2" aria-hidden="true" />
+          <strong>{{ departureTime }}</strong>
+          <span class="arrow" aria-hidden="true">→</span>
+          <span>{{ arrivalTime }}</span>
+        </div>
+        <div class="duration">{{ durationText }}</div>
+      </div>
+
+      <div class="trip-places">
+        <div class="place">
+          <Circle class="icon" :size="16" :stroke-width="2" aria-hidden="true" />
+          <span>{{ originName }}</span>
+        </div>
+        <div class="place">
+          <MapPin class="icon" :size="16" :stroke-width="2" aria-hidden="true" />
+          <span>{{ destinationName }}</span>
+        </div>
+      </div>
+
+      <div class="trip-seat">
+        <Armchair class="icon" :size="16" :stroke-width="2" aria-hidden="true" />
+        <span>{{ seatLabel }}</span>
+      </div>
+
+      <div class="trip-card__right">
+        <div class="trip-price">
+          <strong>{{ priceText }}</strong>
+          <span class="trip-price__hint">por pessoa</span>
+        </div>
+        <button type="button" class="btn-select" @click="toggleSeats">
+          {{ showSeats ? 'OCULTAR ASSENTOS' : 'ESCOLHER IDA' }}
+        </button>
+      </div>
     </div>
 
-    <div class="trip-card__times-col">
-      <div class="trip-times">
-        <Clock class="icon" :size="16" :stroke-width="2" aria-hidden="true" />
-        <strong>{{ departureTime }}</strong>
-        <span class="arrow" aria-hidden="true">→</span>
-        <span>{{ arrivalTime }}</span>
-      </div>
-      <div class="duration">{{ travelDuration }}</div>
-    </div>
-
-    <div class="trip-places">
-      <div class="place">
-        <Circle class="icon" :size="16" :stroke-width="2" aria-hidden="true" />
-        <span>{{ originName }}</span>
-      </div>
-      <div class="place">
-        <MapPin class="icon" :size="16" :stroke-width="2" aria-hidden="true" />
-        <span>{{ destinationName }}</span>
-      </div>
-    </div>
-
-    <div class="trip-seat">
-      <Armchair class="icon" :size="16" :stroke-width="2" aria-hidden="true" />
-      <span>{{ seatLabel }}</span>
-    </div>
-
-    <div class="trip-card__right">
-      <div class="trip-price">
-        <strong>{{ priceText }}</strong>
-        <span class="trip-price__hint">por pessoa</span>
-      </div>
-      <button type="button" class="btn-select">ESCOLHER IDA</button>
+    <div v-if="showSeats" class="trip-card__seats">
+      <p v-if="loadingSeats" class="trip-card__seats-state">Carregando assentos...</p>
+      <p v-else-if="seatsError" class="trip-card__seats-error">{{ seatsError }}</p>
+      <p v-else-if="seats.length === 0" class="trip-card__seats-state">
+        Nenhum assento disponível para este trecho.
+      </p>
+      <SeatGrid v-else :seats="seats" />
     </div>
   </article>
 </template>
+
+<style scoped>
+.trip-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trip-card__seats {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.trip-card__seats-state,
+.trip-card__seats-error {
+  margin: 0;
+  font-size: 13px;
+}
+
+.trip-card__seats-state {
+  color: #64748b;
+}
+
+.trip-card__seats-error {
+  color: #b91c1c;
+}
+</style>
