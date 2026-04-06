@@ -1,7 +1,11 @@
 import { isAxiosError } from 'axios'
 import { defineStore } from 'pinia'
 import { getStops } from '../services/stopsService'
-import type { SearchTripsPayload, Stop } from '../types/models'
+import type {
+  FlattenedStop,
+  SearchTripsPayload,
+  Stop,
+} from '../types/models'
 
 function todayISO(): string {
   const d = new Date()
@@ -11,7 +15,17 @@ function todayISO(): string {
   return `${y}-${m}-${day}`
 }
 
-function filterStops(stops: Stop[], query: string): Stop[] {
+function isStopAllowed(stop: Stop, allowedStates: string[]): boolean {
+  if (typeof stop.allowed === 'boolean') {
+    return stop.allowed
+  }
+  if (allowedStates.length === 0) {
+    return true
+  }
+  return Boolean(stop.state && allowedStates.includes(stop.state))
+}
+
+function filterStops(stops: FlattenedStop[], query: string): FlattenedStop[] {
   const q = query.trim().toLowerCase()
   if (!q) {
     return stops.slice(0, 50)
@@ -21,10 +35,11 @@ function filterStops(stops: Stop[], query: string): Stop[] {
 
 interface SearchState {
   stops: Stop[]
+  allowedStates: string[]
   originInput: string
   destinationInput: string
-  selectedOrigin: Stop | null
-  selectedDestination: Stop | null
+  selectedOrigin: FlattenedStop | null
+  selectedDestination: FlattenedStop | null
   travelDate: string
   loadError: string | null
   loadingStops: boolean
@@ -33,6 +48,7 @@ interface SearchState {
 export const useSearchStore = defineStore('search', {
   state: (): SearchState => ({
     stops: [],
+    allowedStates: [],
     originInput: '',
     destinationInput: '',
     selectedOrigin: null,
@@ -43,11 +59,49 @@ export const useSearchStore = defineStore('search', {
   }),
 
   getters: {
-    filteredOrigins(state): Stop[] {
-      return filterStops(state.stops, state.originInput)
+    allowedStops(state): Stop[] {
+      return state.stops
+        .filter((s) => isStopAllowed(s, state.allowedStates))
+        .map((stop) => ({
+          ...stop,
+          substops: (stop.substops ?? []).filter((sub) =>
+            isStopAllowed(sub, state.allowedStates),
+          ),
+        }))
     },
-    filteredDestinations(state): Stop[] {
-      return filterStops(state.stops, state.destinationInput)
+
+    flattenedStops(): FlattenedStop[] {
+      const list = this.allowedStops.flatMap((stop) => {
+        const base: FlattenedStop[] = [
+          {
+            id: stop.id,
+            name: stop.name,
+            type: stop.type === 'station' ? 'station' : 'city',
+          },
+        ]
+
+        const substops: FlattenedStop[] = (stop.substops ?? []).map((sub) => ({
+          id: sub.id,
+          name: sub.name,
+          type: 'station' as const,
+          parent: stop.id,
+        }))
+
+        return [...base, ...substops]
+      })
+
+      const map = new Map<string, FlattenedStop>()
+      for (const item of list) {
+        map.set(item.id, item)
+      }
+      return Array.from(map.values())
+    },
+
+    filteredOrigins(): FlattenedStop[] {
+      return filterStops(this.flattenedStops, this.originInput)
+    },
+    filteredDestinations(): FlattenedStop[] {
+      return filterStops(this.flattenedStops, this.destinationInput)
     },
     canSearch(state): boolean {
       return Boolean(
@@ -67,7 +121,9 @@ export const useSearchStore = defineStore('search', {
       this.loadError = null
       this.loadingStops = true
       try {
-        this.stops = await getStops()
+        const { stops, allowedStates } = await getStops()
+        this.stops = stops
+        this.allowedStates = allowedStates
       } catch (e: unknown) {
         let msg: string | undefined
         if (isAxiosError(e)) {
@@ -96,13 +152,13 @@ export const useSearchStore = defineStore('search', {
       }
     },
 
-    selectOrigin(stop: Stop): void {
-      this.selectedOrigin = { id: stop.id, name: stop.name }
+    selectOrigin(stop: FlattenedStop): void {
+      this.selectedOrigin = { id: stop.id, name: stop.name, type: stop.type }
       this.originInput = stop.name
     },
 
-    selectDestination(stop: Stop): void {
-      this.selectedDestination = { id: stop.id, name: stop.name }
+    selectDestination(stop: FlattenedStop): void {
+      this.selectedDestination = { id: stop.id, name: stop.name, type: stop.type }
       this.destinationInput = stop.name
     },
 

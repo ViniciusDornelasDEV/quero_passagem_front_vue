@@ -122,7 +122,12 @@ onMounted(() => {
                       originOpen = false;
                     "
                   >
-                    {{ stop.name }}
+                    <div v-if="stop.type === 'city'" class="option--city">
+                      {{ stop.name }}
+                    </div>
+                    <div v-else class="option--station">
+                      ↳ {{ stop.name }}
+                    </div>
                   </li>
                 </ul>
               </div>
@@ -169,7 +174,12 @@ onMounted(() => {
                       destinationOpen = false;
                     "
                   >
-                    {{ stop.name }}
+                    <div v-if="stop.type === 'city'" class="option--city">
+                      {{ stop.name }}
+                    </div>
+                    <div v-else class="option--station">
+                      ↳ {{ stop.name }}
+                    </div>
                   </li>
                 </ul>
               </div>
@@ -229,53 +239,3 @@ onMounted(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.input-inner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  min-height: 32px;
-}
-
-.input-inner__icon {
-  flex-shrink: 0;
-  color: #64748b;
-}
-
-.input-inner__field {
-  flex: 1;
-  min-width: 0;
-}
-
-.input-inner__control {
-  flex: 1;
-  min-width: 0;
-  width: 100%;
-}
-
-.switch-button {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 8px;
-  margin: -6px -4px -6px 0;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: #2f66b3;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.switch-button:hover {
-  background: rgba(47, 102, 179, 0.15);
-}
-
-.switch-button:focus-visible {
-  outline: 2px solid #2f66b3;
-  outline-offset: 2px;
-}
-</style>
